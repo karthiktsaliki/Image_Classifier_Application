@@ -9,19 +9,12 @@ import torchvision.datasets as dsets
 import torchvision.transforms as transforms
 import torchvision.models as models
 from torch.autograd import Variable
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
 import torch.optim as optim
 from torch.optim import lr_scheduler
-import numpy as np
 import time
 import os
 from tqdm import tqdm
-from sklearn.metrics import accuracy_score
-import pandas as pd
-import torch.optim as optim
-from torch.optim import lr_scheduler
-from PIL import Image
+import argparse
 
 data_dir = 'C:/Users/TsalikiK/Downloads/Kantar/Kantar_Python_Work/Notebooks/aipnd-project'
 train_dir = data_dir + '/train'
@@ -54,9 +47,8 @@ def data_loaders():
     image_datasets = {x: dsets.ImageFolder(os.path.join(data_dir, x),data_transforms[x]) for x in ['train', 'valid','test']}
 
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=64,shuffle=True, num_workers=4) for x in ['train', 'valid','test']}
-    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'valid','test']}
 
-    return dataloaders,dataset_sizes
+    return dataloaders,image_datasets
 
 
 def vgg16():
@@ -177,24 +169,28 @@ def get_input_args():
 def main():
     # Retrieving the command line arguments
     in_arg = get_input_args()
-    dataloaders,dataset_sizes=data_loaders()
+    dataloaders,image_datasets=data_loaders()
+    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'valid','test']}
     # Traning with the selected model
-    if in_arg.model='vgg16':
+    if in_arg.model=='vgg16':
         model=vgg16()
-    elif in_arg.model='resnet18':
+    elif in_arg.model=='resnet18':
         model=resnet()
     # Getting the hyperparametes and use_gpu
     print("[Using CrossEntropyLoss...]")
     criterion = nn.CrossEntropyLoss()
     print("[Using small learning rate with momentum...]")
-    optimizer_conv = optim.SGD(list(filter(lambda p: p.requires_grad, model_conv.parameters())), lr=in_arg.lr, momentum=0.9)
+    optimizer_conv = optim.SGD(list(filter(lambda p: p.requires_grad, model.parameters())), lr=in_arg.lr, momentum=0.9)
     print("[Creating Learning rate scheduler...]")
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
     print("[Training the model begun ....]")
-    model_ft = train_model(model_conv, dataloaders, dataset_sizes, criterion, optimizer_conv, exp_lr_scheduler,in_arg.use_gpu, in_arg.num_epochs)
+    model_ft = train_model(model, dataloaders, dataset_sizes, criterion, optimizer_conv, exp_lr_scheduler,in_arg.use_gpu, in_arg.num_epochs)
     # Saving the model
     print("[Saving the model and optimizer ....]")
     model_ft.class_to_idx = image_datasets['train'].class_to_idx
     torch.save(model_ft,'flowers_transfer_command.pt')
     torch.save(optimizer_conv.state_dict(), 'optimizers_command.pt')
+    
+if __name__=='__main__':
+    main()
         

@@ -2,26 +2,13 @@
 
 # Imports here
 import torch
-import torch.nn as nn
-import torchvision.datasets as dsets
 import torchvision.transforms as transforms
-import torchvision.models as models
 from torch.autograd import Variable
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
-import torch.optim as optim
-from torch.optim import lr_scheduler
 import numpy as np
-import time
-import os
-from tqdm import tqdm
-from sklearn.metrics import accuracy_score
-import pandas as pd
-import torch.optim as optim
-from torch.optim import lr_scheduler
 from PIL import Image
 import json
-
+import argparse
 
 def process_image(image):
     ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
@@ -58,7 +45,7 @@ def predict(image_path, model, topk=5,use_gpu=False):
     arr=np.array(img_tensor)
     img_tensor=Variable(torch.from_numpy(arr.reshape(1,3,224,224)))
     if use_gpu:
-        inputs = Variable(img_tensor.cuda())
+        img_tensor = Variable(img_tensor.cuda())
     else:
         img_tensor = Variable(img_tensor)
     output=model(img_tensor)
@@ -108,3 +95,6 @@ def main():
     print('Categories Predicted:',x_labels)
     print('Probabilities in respective manner:',probs)
 
+if __name__=='__main__':
+    main()
+        
